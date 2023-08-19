@@ -16,22 +16,57 @@ config_delimiter: str = "```\n"
 config_css_name: str = "style.css"
 config_tmpl_ext: str = ""
 
-def update_note_type(model, fields, templates, css):
+def update_model(model, fields, card_types, css):
     model[key_name_anki_model_css] = css
     current_templates = model['tmpls']
-    for template_to_edit_or_add in templates:
-        index = next((i for i, item in enumerate(current_templates) if item['name'] == template_to_edit_or_add['name']), None)
+    for card_type in card_types:
+        index = next((i for i, item in enumerate(current_templates) if item['name'] == card_type['name']), None)
         # In this conditional, we shouldn't write "if index:", because
         # when the index is 0, it will evaluate to False, when index
         # is 0, we want to evaluate to True.
         if index != None:
-            current_templates[index]['qfmt'] = template_to_edit_or_add['front']
-            current_templates[index]['afmt'] = template_to_edit_or_add['back']
+            current_templates[index]['qfmt'] = card_type['front']
+            current_templates[index]['afmt'] = card_type['back']
         else:
-            template = aqt.mw.col.models.new_template(template_to_edit_or_add['name'])
-            template['qfmt'] = template_to_edit_or_add['front']
-            template['afmt'] = template_to_edit_or_add['back']
+            template = aqt.mw.col.models.new_template(card_type['name'])
+            template['qfmt'] = card_type['front']
+            template['afmt'] = card_type['back']
             aqt.mw.col.models.add_template(model, template)
+    aqt.mw.col.models.save(model)
+
+def create_model(name, fields, card_types, css):
+    # create_model('My model', ['field 1', 'field 2', 'field 3'], [
+    #     {
+    #         'name': 'My card type 1',
+    #         'front': '{{foo1}}',
+    #         'back': '{{foo32}}'
+    #     },
+    #     {
+    #         'name': 'My card type 2',
+    #         'front': '{{foo2}}',
+    #         'back': '{{foo1}}'
+    #     },
+    #     {
+    #         'name': 'My card type 3',
+    #         'front': '{{foo3}}',
+    #         'back': '{{foo1}}'
+    #     }])
+    # Create new model
+    new_model = aqt.mw.col.models.new(name)
+    # Add CSS
+    if css:
+        new_model['css'] = css
+    # Add fields
+    for i in fields:
+        field = aqt.mw.col.models.new_field(i)
+        aqt.mw.col.models.add_field(new_model, field)
+    # Add card_types
+    for card_type in card_types:
+        template = aqt.mw.col.models.new_template(card_type['name'])
+        template['qfmt'] = card_type['front']
+        template['afmt'] = card_type['back']
+        aqt.mw.col.models.add_template(new_model, template)
+    aqt.mw.col.models.add(new_model)
 
 def _reload_config():
     utils.reload_config()
@@ -45,25 +80,36 @@ def import_tmpls():
     if not root: return
     _reload_config()
 
-    notetypes = [item for item in os.listdir(root) if os.path.isdir(os.path.join(root, item))]
+    file_path_dir_note_types = [os.path.join(root, item)
+                                for item in os.listdir(root)
+                                if os.path.isdir(os.path.join(root, item))]
 
-    count_notetype = 0
-    count_template = 0
-    count_no_css = 0
-    for name in notetypes:
-        nt = aqt.mw.col.models.byName(name)
-        if not nt:
-            continue
-
-        count = 0
+    for file_path_dir_note_type in file_path_dir_note_types:
+        note_type_name = os.path.basename(file_path_dir_note_type)
+        # Collect fields
+        file_path_fields = os.path.join(file_path_dir_note_type, 'fields.txt')
+        fields = []
+        if os.path.exists(file_path_fields):
+            with open(file_path_fields, 'r') as f:
+                for line in f:
+                    if line.strip() == "" or line[0] == "#":
+                        continue
+                    fields.append(line.strip())
+        # Collect CSS
+        file_path_css = os.path.join(file_path_dir_note_type, 'style.css')
+        css = None
+        if os.path.exists(file_path_css):
+            with open(file_path_css, "r", encoding="utf-8") as f:
+                css = f.read()
+        # Collect all card types
+        #
         # Iterate through all directories that exist inside the
         # directory of a note type. Each directory correspond to a
         # card type and generally contain two files: front.html and
         # back.html.
-        file_path_dir_card_types = [os.path.join(root, name, x)
-                                   for x in os.listdir(os.path.join(root, name))
-                                   if os.path.isdir(os.path.join(root, name, x))]
-        # Collect all card types
+        file_path_dir_card_types = [os.path.join(file_path_dir_note_type, x)
+                                   for x in os.listdir(os.path.join(file_path_dir_note_type))
+                                   if os.path.isdir(os.path.join(file_path_dir_note_type, x))]
         card_types = []
         for file_path_dir_card_type in file_path_dir_card_types:
             card_type = {
@@ -78,17 +124,21 @@ def import_tmpls():
                 with open(file_path_back, "r", encoding="utf-8") as f:
                     card_type['back'] = f.read()
             card_types.append(card_type)
-        # Update the css, fields, card type of the note type
-        update_note_type(nt, '', card_types, '')
-        try:
-            aqt.mw.col.models.save(nt)
-        except Exception:
-            gui.show_error("note type \"{}\" contains errors!!".format(name))
-            continue
-        count_notetype += 1
-        count_template += count
-    gui.notify("imported (Template: {}, CSS: {} from NoteType:{})".format(count_template, count_notetype - count_no_css,
-                                                                          count_notetype))
+        model = aqt.mw.col.models.by_name(note_type_name)
+        # If the note type exists, update it.
+        if model:
+            update_model(
+                model = model,
+                css = css,
+                card_types = card_types,
+                fields = fields)
+        # If the model doesn't exist, create it
+        else:
+            create_model(
+                name = note_type_name,
+                fields = fields,
+                card_types = card_types,
+                css = css)
 
 
 def export_tmpls():
