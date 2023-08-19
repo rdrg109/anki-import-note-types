@@ -97,7 +97,17 @@ def export_tmpls():
         notetype_path = os.path.join(root, notetype_name_stripped)
         os.makedirs(notetype_path, exist_ok=True)
         # Create text file containing all fields
-        with open(os.path.join(notetype_path, 'fields.txt'), "w", encoding="utf-8") as f:
+        with open(os.path.join(notetype_path, 'fields.json'), "w", encoding="utf-8") as f:
+            # As of v⁨2.1.65, the dictionary of each field has an "ord"
+            # key which is equal to the corresponding index in the
+            # list of fields. When a field doesn't have this key, Anki
+            # shows an error when editing the fields through the
+            # interface.  Although this number can be automatically
+            # generated and users might wonder what is its purpose in
+            # fields.json, we still store it in fields.json, to avoid
+            # doing magickery for ensuring that this value exists. The
+            # user should konw that this number shouldn't be edited by
+            # hand.
             f.write(json.dumps(nt[key_name_anki_model_fields], indent=2))
         # Create CSS file associated with the note type
         if key_name_anki_model_css in nt:
