@@ -1,9 +1,11 @@
 import os
+import json
 import aqt
 from . import gui, utils
 
 # key names used by Anki
 key_name_anki_model_css = "css"
+key_name_anki_model_fields = "flds"
 key_name_anki_model_templates = "tmpls"
 key_name_anki_model_template_name = "name"
 key_name_anki_model_template_front = "qfmt"
@@ -102,6 +104,9 @@ def export_tmpls():
                            "name.".format(notetype_name))
         notetype_path = os.path.join(root, notetype_name_stripped)
         os.makedirs(notetype_path, exist_ok=True)
+        # Create text file containing all fields
+        with open(os.path.join(notetype_path, 'fields.txt'), "w", encoding="utf-8") as f:
+            f.write(json.dumps(nt[key_name_anki_model_fields], indent=2))
         # Create CSS file associated with the note type
         if key_name_anki_model_css in nt:
             with open(os.path.join(notetype_path, config_css_name), "w", encoding="utf-8") as f:
