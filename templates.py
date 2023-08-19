@@ -16,6 +16,22 @@ config_delimiter: str = "```\n"
 config_css_name: str = "style.css"
 config_tmpl_ext: str = ""
 
+def update_note_type(model, fields, templates, css):
+    current_templates = model['tmpls']
+    for template_to_edit_or_add in templates:
+        index = next((i for i, item in enumerate(current_templates) if item['name'] == template_to_edit_or_add['name']), None)
+        # In this conditional, we shouldn't write "if index:", because
+        # when the index is 0, it will evaluate to False, when index
+        # is 0, we want to evaluate to True.
+        if index != None:
+            current_templates[index]['qfmt'] = template_to_edit_or_add['front']
+            current_templates[index]['afmt'] = template_to_edit_or_add['back']
+        else:
+            template = aqt.mw.col.models.new_template(template_to_edit_or_add['name'])
+            template['qfmt'] = template_to_edit_or_add['front']
+            template['afmt'] = template_to_edit_or_add['back']
+            aqt.mw.col.models.add_template(model, template)
+
 def _reload_config():
     utils.reload_config()
     global config_delimiter, config_css_name, config_tmpl_ext
@@ -39,32 +55,30 @@ def import_tmpls():
             continue
 
         count = 0
-        # Read CSS file and store it as a property to the note
-        # type. As of Anki 2.1.65, a note type has a unique CSS field
-        # and multiple card types associated with this note type are
-        # affected by it.
-        file = os.path.join(root, name, config_css_name)
-        css = None
-        if os.path.exists(file):
-            with open(file, "r", encoding="utf-8") as f:
-                nt[key_name_anki_model_css] = f.read()
-                count_no_css += 1
-        # Read files in directories in each template. Each directory
-        # only contains two HTML files: one is the Front Template and
-        # the other one is the Back Template.
-        for tmpl in nt.get(key_name_anki_model_templates, []):
-            if key_name_anki_model_template_name not in tmpl:
-                continue
-            file_path_front = os.path.join(root, name, tmpl[key_name_anki_model_template_name], 'front.html')
-            file_path_back = os.path.join(root, name, tmpl[key_name_anki_model_template_name], 'back.html')
+        # Iterate through all directories that exist inside the
+        # directory of a note type. Each directory correspond to a
+        # card type and generally contain two files: front.html and
+        # back.html.
+        file_path_dir_card_types = [os.path.join(root, name, x)
+                                   for x in os.listdir(os.path.join(root, name))
+                                   if os.path.isdir(os.path.join(root, name, x))]
+        # Collect all card types
+        card_types = []
+        for file_path_dir_card_type in file_path_dir_card_types:
+            card_type = {
+                'name': os.path.basename(file_path_dir_card_type)
+            }
+            file_path_front = os.path.join(file_path_dir_card_type, 'front.html')
+            file_path_back = os.path.join(file_path_dir_card_type, 'back.html')
             if os.path.exists(file_path_front):
                 with open(file_path_front, "r", encoding="utf-8") as f:
-                    tmpl[key_name_anki_model_template_front] = f.read()
-                count += 1
+                    card_type['front'] = f.read()
             if os.path.exists(file_path_back):
                 with open(file_path_back, "r", encoding="utf-8") as f:
-                    tmpl[key_name_anki_model_template_back] = f.read()
-                count += 1
+                    card_type['back'] = f.read()
+            card_types.append(card_type)
+        # Update the css, fields, card type of the note type
+        update_note_type(nt, '', card_types, '')
         try:
             aqt.mw.col.models.save(nt)
         except Exception:
