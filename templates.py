@@ -39,12 +39,19 @@ def import_tmpls():
             continue
 
         count = 0
+        # Read CSS file and store it as a property to the note
+        # type. As of Anki 2.1.65, a note type has a unique CSS field
+        # and multiple card types associated with this note type are
+        # affected by it.
         file = os.path.join(root, name, config_css_name)
         css = None
         if os.path.exists(file):
             with open(file, "r", encoding="utf-8") as f:
                 nt[key_name_anki_model_css] = f.read()
                 count_no_css += 1
+        # Read files in directories in each template. Each directory
+        # only contains two HTML files: one is the Front Template and
+        # the other one is the Back Template.
         for tmpl in nt.get(key_name_anki_model_templates, []):
             if key_name_anki_model_template_name not in tmpl:
                 continue
