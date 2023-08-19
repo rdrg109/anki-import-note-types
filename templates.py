@@ -108,9 +108,17 @@ def export_tmpls():
             except KeyError:
                 gui.show_error("A template in notetype \"{}\" has no name!!".format(notetype_name))
                 continue
-            with open(path.join(notetype_path, tmpl_name + _tmpl_ext), "w", encoding="utf-8") as f:
-                if _anki_front in tmpl and _anki_back in tmpl:
-                    f.write(tmpl[_anki_front] + _delimiter + tmpl[_anki_back])
+            file_path_dir = path.join(notetype_path, tmpl_name) + '/'
+            if not os.path.isdir(file_path_dir):
+                os.makedirs(file_path_dir)
+            file_path_front = path.join(file_path_dir, 'front.html')
+            file_path_back = path.join(file_path_dir, 'back.html')
+            if _anki_front in tmpl:
+                with open(file_path_front, "w", encoding="utf-8") as f:
+                    f.write(tmpl[_anki_front])
+            if _anki_front in tmpl:
+                with open(file_path_back, "w", encoding="utf-8") as f:
+                    f.write(tmpl[_anki_back])
             count_template += 1
         count_notetype += 1
     gui.notify("exported (Template: {} from NoteType:{})".format(count_template, count_notetype))
