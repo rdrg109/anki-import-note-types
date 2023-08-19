@@ -1,8 +1,6 @@
 import os
 from os import path
-
 from aqt import mw as window
-
 from . import gui, utils
 
 # key names used by Anki
