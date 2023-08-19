@@ -10,19 +10,19 @@ key_name_anki_model_template_front = "qfmt"
 key_name_anki_model_template_back = "afmt"
 
 # config
-_delimiter: str = "```\n"
-_css_name: str = "style.css"
-_tmpl_ext: str = ""
-_merge_css: bool = False
+config_delimiter: str = "```\n"
+config_css_name: str = "style.css"
+config_tmpl_ext: str = ""
+config_merge_css: bool = False
 
 
 def _reload_config():
     utils.reload_config()
-    global _delimiter, _css_name, _tmpl_ext, _merge_css
-    _delimiter = utils.cfg("delimiter")
-    _css_name = utils.cfg("cssName")
-    _tmpl_ext = utils.cfg("tmplExt")
-    _merge_css = utils.cfg("mergeCSS")
+    global config_delimiter, config_css_name, config_tmpl_ext, config_merge_css
+    config_delimiter = utils.cfg("delimiter")
+    config_css_name = utils.cfg("cssName")
+    config_tmpl_ext = utils.cfg("tmplExt")
+    config_merge_css = utils.cfg("mergeCSS")
 
 
 def import_tmpls():
@@ -33,7 +33,7 @@ def import_tmpls():
     notetypes = [item for item in os.listdir(root) if os.path.isdir(os.path.join(root, item))]
 
     global_css = None
-    file = os.path.join(root, _css_name)
+    file = os.path.join(root, config_css_name)
     if os.path.exists(file):
         with open(file, "r", encoding="utf-8") as f:
             global_css = f.read()
@@ -46,13 +46,13 @@ def import_tmpls():
         if not nt: continue
 
         count = 0
-        file = os.path.join(root, name, _css_name)
+        file = os.path.join(root, name, config_css_name)
         css = None
         if os.path.exists(file):
             with open(file, "r", encoding="utf-8") as f:
                 css = f.read()
         if global_css and css:
-            nt[key_name_anki_model_css] = global_css + css if _merge_css else css
+            nt[key_name_anki_model_css] = global_css + css if config_merge_css else css
         elif global_css or css:
             nt[key_name_anki_model_css] = css if css else global_css
         else:
@@ -103,7 +103,7 @@ def export_tmpls():
         notetype_path = os.path.join(root, notetype_name_stripped)
         os.makedirs(notetype_path, exist_ok=True)
         if key_name_anki_model_css in nt:
-            with open(os.path.join(notetype_path, _css_name), "w", encoding="utf-8") as f:
+            with open(os.path.join(notetype_path, config_css_name), "w", encoding="utf-8") as f:
                 f.write(nt[key_name_anki_model_css])
         for tmpl in nt.get(key_name_anki_model_templates, []):
             try:
