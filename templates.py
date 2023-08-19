@@ -17,6 +17,7 @@ config_css_name: str = "style.css"
 config_tmpl_ext: str = ""
 
 def update_note_type(model, fields, templates, css):
+    model[key_name_anki_model_css] = css
     current_templates = model['tmpls']
     for template_to_edit_or_add in templates:
         index = next((i for i, item in enumerate(current_templates) if item['name'] == template_to_edit_or_add['name']), None)
