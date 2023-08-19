@@ -108,6 +108,7 @@ def export_tmpls():
             except KeyError:
                 gui.show_error("A template in notetype \"{}\" has no name!!".format(notetype_name))
                 continue
+            # file_path_dir stores the name of the directory for a card type
             file_path_dir = path.join(notetype_path, tmpl_name) + '/'
             if not os.path.isdir(file_path_dir):
                 os.makedirs(file_path_dir)
