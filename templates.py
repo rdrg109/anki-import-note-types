@@ -62,11 +62,17 @@ def import_tmpls():
             count_no_css += 1
 
         for tmpl in nt.get(key_name_anki_model_templates, []):
-            if key_name_anki_model_template_name not in tmpl: continue
-            file = path.join(root, name, tmpl[key_name_anki_model_template_name] + _tmpl_ext)
-            if os.path.exists(file):
-                with open(file, "r", encoding="utf-8") as f:
-                    tmpl[key_name_anki_model_template_front], _, tmpl[key_name_anki_model_template_back] = f.read().partition(_delimiter)
+            if key_name_anki_model_template_name not in tmpl:
+                continue
+            file_path_front = path.join(root, name, tmpl[key_name_anki_model_template_name], 'front.html')
+            file_path_back = path.join(root, name, tmpl[key_name_anki_model_template_name], 'back.html')
+            if os.path.exists(file_path_front):
+                with open(file_path_front, "r", encoding="utf-8") as f:
+                    tmpl[key_name_anki_model_template_front] = f.read()
+                count += 1
+            if os.path.exists(file_path_back):
+                with open(file_path_back, "r", encoding="utf-8") as f:
+                    tmpl[key_name_anki_model_template_back] = f.read()
                 count += 1
         try:
             window.col.models.save(nt)
