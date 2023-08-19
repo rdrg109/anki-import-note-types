@@ -80,6 +80,9 @@ def import_tmpls():
     if not root: return
     _reload_config()
 
+    count_updated_model = 0
+    count_created_model = 0
+
     file_path_dir_note_types = [os.path.join(root, item)
                                 for item in os.listdir(root)
                                 if os.path.isdir(os.path.join(root, item))]
@@ -132,6 +135,7 @@ def import_tmpls():
                 css = css,
                 card_types = card_types,
                 fields = fields)
+            count_updated_model = count_updated_model + 1
         # If the model doesn't exist, create it
         else:
             create_model(
@@ -139,6 +143,8 @@ def import_tmpls():
                 fields = fields,
                 card_types = card_types,
                 css = css)
+            count_created_model = count_created_model + 1
+    gui.notify(f"created model: {count_created_model}, updated models: {count_updated_model}")
 
 
 def export_tmpls():
