@@ -6,11 +6,11 @@ from aqt import mw as window
 from . import gui, utils
 
 # key names used by Anki
-_anki_css = "css"
-_anki_templates = "tmpls"
-_anki_name = "name"
-_anki_front = "qfmt"
-_anki_back = "afmt"
+key_name_anki_model_css = "css"
+key_name_anki_model_templates = "tmpls"
+key_name_anki_model_template_name = "name"
+key_name_anki_model_template_front = "qfmt"
+key_name_anki_model_template_back = "afmt"
 
 # config
 _delimiter: str = "```\n"
@@ -55,18 +55,18 @@ def import_tmpls():
             with open(file, "r", encoding="utf-8") as f:
                 css = f.read()
         if global_css and css:
-            nt[_anki_css] = global_css + css if _merge_css else css
+            nt[key_name_anki_model_css] = global_css + css if _merge_css else css
         elif global_css or css:
-            nt[_anki_css] = css if css else global_css
+            nt[key_name_anki_model_css] = css if css else global_css
         else:
             count_no_css += 1
 
-        for tmpl in nt.get(_anki_templates, []):
-            if _anki_name not in tmpl: continue
-            file = path.join(root, name, tmpl[_anki_name] + _tmpl_ext)
+        for tmpl in nt.get(key_name_anki_model_templates, []):
+            if key_name_anki_model_template_name not in tmpl: continue
+            file = path.join(root, name, tmpl[key_name_anki_model_template_name] + _tmpl_ext)
             if os.path.exists(file):
                 with open(file, "r", encoding="utf-8") as f:
-                    tmpl[_anki_front], _, tmpl[_anki_back] = f.read().partition(_delimiter)
+                    tmpl[key_name_anki_model_template_front], _, tmpl[key_name_anki_model_template_back] = f.read().partition(_delimiter)
                 count += 1
         try:
             window.col.models.save(nt)
@@ -88,7 +88,7 @@ def export_tmpls():
     count_template = 0
     for nt in window.col.models.all():
         try:
-            notetype_name = nt.get(_anki_name)
+            notetype_name = nt.get(key_name_anki_model_template_name)
         except KeyError:
             gui.show_error("The notetype has no name!!")
             continue
@@ -99,12 +99,12 @@ def export_tmpls():
                            "name.".format(notetype_name))
         notetype_path = path.join(root, notetype_name_stripped)
         os.makedirs(notetype_path, exist_ok=True)
-        if _anki_css in nt:
+        if key_name_anki_model_css in nt:
             with open(path.join(notetype_path, _css_name), "w", encoding="utf-8") as f:
-                f.write(nt[_anki_css])
-        for tmpl in nt.get(_anki_templates, []):
+                f.write(nt[key_name_anki_model_css])
+        for tmpl in nt.get(key_name_anki_model_templates, []):
             try:
-                tmpl_name = tmpl.get(_anki_name)
+                tmpl_name = tmpl.get(key_name_anki_model_template_name)
             except KeyError:
                 gui.show_error("A template in notetype \"{}\" has no name!!".format(notetype_name))
                 continue
@@ -114,12 +114,12 @@ def export_tmpls():
                 os.makedirs(file_path_dir)
             file_path_front = path.join(file_path_dir, 'front.html')
             file_path_back = path.join(file_path_dir, 'back.html')
-            if _anki_front in tmpl:
+            if key_name_anki_model_template_front in tmpl:
                 with open(file_path_front, "w", encoding="utf-8") as f:
-                    f.write(tmpl[_anki_front])
-            if _anki_front in tmpl:
+                    f.write(tmpl[key_name_anki_model_template_front])
+            if key_name_anki_model_template_front in tmpl:
                 with open(file_path_back, "w", encoding="utf-8") as f:
-                    f.write(tmpl[_anki_back])
+                    f.write(tmpl[key_name_anki_model_template_back])
             count_template += 1
         count_notetype += 1
     gui.notify("exported (Template: {} from NoteType:{})".format(count_template, count_notetype))
