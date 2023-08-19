@@ -15,17 +15,13 @@ key_name_anki_model_template_back = "afmt"
 config_delimiter: str = "```\n"
 config_css_name: str = "style.css"
 config_tmpl_ext: str = ""
-config_merge_css: bool = False
-
 
 def _reload_config():
     utils.reload_config()
-    global config_delimiter, config_css_name, config_tmpl_ext, config_merge_css
+    global config_delimiter, config_css_name, config_tmpl_ext
     config_delimiter = utils.cfg("delimiter")
     config_css_name = utils.cfg("cssName")
     config_tmpl_ext = utils.cfg("tmplExt")
-    config_merge_css = utils.cfg("mergeCSS")
-
 
 def import_tmpls():
     root = gui.get_dir()
@@ -34,32 +30,21 @@ def import_tmpls():
 
     notetypes = [item for item in os.listdir(root) if os.path.isdir(os.path.join(root, item))]
 
-    global_css = None
-    file = os.path.join(root, config_css_name)
-    if os.path.exists(file):
-        with open(file, "r", encoding="utf-8") as f:
-            global_css = f.read()
-
     count_notetype = 0
     count_template = 0
     count_no_css = 0
     for name in notetypes:
         nt = aqt.mw.col.models.byName(name)
-        if not nt: continue
+        if not nt:
+            continue
 
         count = 0
         file = os.path.join(root, name, config_css_name)
         css = None
         if os.path.exists(file):
             with open(file, "r", encoding="utf-8") as f:
-                css = f.read()
-        if global_css and css:
-            nt[key_name_anki_model_css] = global_css + css if config_merge_css else css
-        elif global_css or css:
-            nt[key_name_anki_model_css] = css if css else global_css
-        else:
-            count_no_css += 1
-
+                nt[key_name_anki_model_css] = f.read()
+                count_no_css += 1
         for tmpl in nt.get(key_name_anki_model_templates, []):
             if key_name_anki_model_template_name not in tmpl:
                 continue
