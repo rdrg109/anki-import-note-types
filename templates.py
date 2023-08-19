@@ -102,9 +102,13 @@ def export_tmpls():
                            "name.".format(notetype_name))
         notetype_path = os.path.join(root, notetype_name_stripped)
         os.makedirs(notetype_path, exist_ok=True)
+        # Create CSS file associated with the note type
         if key_name_anki_model_css in nt:
             with open(os.path.join(notetype_path, config_css_name), "w", encoding="utf-8") as f:
                 f.write(nt[key_name_anki_model_css])
+        # Create a directory for each card type. Each directory
+        # contains a HTML file for the Front Template and the Back
+        # Template.
         for tmpl in nt.get(key_name_anki_model_templates, []):
             try:
                 tmpl_name = tmpl.get(key_name_anki_model_template_name)
