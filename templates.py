@@ -12,9 +12,7 @@ key_name_anki_model_template_front = "qfmt"
 key_name_anki_model_template_back = "afmt"
 
 # config
-config_delimiter: str = "```\n"
 config_css_name: str = "style.css"
-config_tmpl_ext: str = ""
 
 def update_model(model, fields, card_types, css):
     model[key_name_anki_model_css] = css
@@ -70,10 +68,8 @@ def create_model(name, fields, card_types, css):
 
 def _reload_config():
     utils.reload_config()
-    global config_delimiter, config_css_name, config_tmpl_ext
-    config_delimiter = utils.cfg("delimiter")
+    global config_css_name
     config_css_name = utils.cfg("cssName")
-    config_tmpl_ext = utils.cfg("tmplExt")
 
 def import_tmpls():
     root = gui.get_dir()
