@@ -9,10 +9,6 @@ def _edit_config():
     addons.ConfigEditor(window, __name__, window.addonManager.getConfig(__name__))
 
 def init():
-    # init error dialog
-    global err
-    err = aqt.QErrorMessage(window)
-
     # menu items
     menu = aqt.QMenu(window.form.menuTools)
     menu.setTitle("Import / Export templates")
@@ -32,11 +28,6 @@ def init():
     # editor setup for _edit_config
     window.mgr = window.addonManager
 
-
-def show_error(msg: str, err_type: str = "all"):
-    err.showMessage(msg, err_type)
-
-
 def get_dir():
     folder = aqt.QFileDialog.getExistingDirectory(window, "Select a Directory")
     return folder if len(folder) != 0 else None
@@ -45,5 +36,3 @@ def get_dir():
 def notify(msg: str, time: int = 5000):
     utils.tooltip(msg, time)
 
-
-err = None
