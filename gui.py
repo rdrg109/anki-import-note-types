@@ -8,20 +8,6 @@ import os
 def _edit_config():
     addons.ConfigEditor(window, __name__, window.addonManager.getConfig(__name__))
 
-
-def _help():
-    file = os.path.join(os.path.dirname(os.path.realpath(__file__)), "README.md")
-    if os.path.exists(file):
-        with open(file, "r", encoding="utf-8") as f:
-            doc = f.read()
-        box = aqt.QMessageBox(window)
-        box.setTextFormat(QtCore.Qt.MarkdownText)
-        box.setText(doc)
-        box.exec()
-    else:
-        show_error("Help document missing!!")
-
-
 def init():
     # init error dialog
     global err
