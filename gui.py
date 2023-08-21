@@ -16,9 +16,9 @@ def init():
 
     actions = [
         (qt.QAction("Export to ...", menu), templates.export_tmpls),
-        (qt.QAction("Import from ...", menu), templates.import_tmpls),
-        (qt.QAction("Configure", menu), _edit_config),
-        (qt.QAction("Help / Guide", menu), _help)
+        (qt.QAction("Import from ...", menu), templates.import_note_types_from_user_selected_directory),
+        (qt.QAction("Import from default directory", menu), templates.import_note_types_from_default_directory),
+        (qt.QAction("Configure", menu), _edit_config)
     ]
 
     for action, func in actions:
