@@ -30,6 +30,8 @@ def init():
 
 def get_dir():
     folder = aqt.QFileDialog.getExistingDirectory(window, "Select a Directory")
-    return folder if len(folder) != 0 else None
+    if len(folder) != 0:
+        return folder
+    return None
 
 
