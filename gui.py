@@ -1,35 +1,31 @@
-from PyQt5 import QtCore
-from aqt import mw as window, utils, qt, addons
 import aqt
 from . import templates
-import os
-
 
 def _edit_config():
-    addons.ConfigEditor(window, __name__, window.addonManager.getConfig(__name__))
+    aqt.addons.ConfigEditor(aqt.mw, __name__, aqt.mw.addonManager.getConfig(__name__))
 
 def init():
     # menu items
-    menu = aqt.QMenu(window.form.menuTools)
+    menu = aqt.QMenu(aqt.mw.form.menuTools)
     menu.setTitle("Import / Export templates")
-    window.form.menuTools.addAction(menu.menuAction())
+    aqt.mw.form.menuTools.addAction(menu.menuAction())
 
     actions = [
-        (qt.QAction("Export to ...", menu), templates.export_tmpls),
-        (qt.QAction("Import from ...", menu), templates.import_note_types_from_user_selected_directory),
-        (qt.QAction("Import from default directory", menu), templates.import_note_types_from_default_directory),
-        (qt.QAction("Configure", menu), _edit_config)
+        (aqt.qt.QAction("Export to ...", menu), templates.export_tmpls),
+        (aqt.qt.QAction("Import from ...", menu), templates.import_note_types_from_user_selected_directory),
+        (aqt.qt.QAction("Import from default directory", menu), templates.import_note_types_from_default_directory),
+        (aqt.qt.QAction("Configure", menu), _edit_config)
     ]
 
     for action, func in actions:
-        utils.qconnect(action.triggered, func)
+        aqt.utils.qconnect(action.triggered, func)
         menu.addAction(action)
 
     # editor setup for _edit_config
-    window.mgr = window.addonManager
+    aqt.mw.mgr = aqt.mw.addonManager
 
 def get_dir():
-    folder = aqt.QFileDialog.getExistingDirectory(window, "Select a Directory")
+    folder = aqt.QFileDialog.getExistingDirectory(aqt.mw, "Select a Directory")
     if len(folder) != 0:
         return folder
     return None
