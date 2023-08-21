@@ -11,9 +11,6 @@ key_name_anki_model_template_name = "name"
 key_name_anki_model_template_front = "qfmt"
 key_name_anki_model_template_back = "afmt"
 
-# config
-config_css_name: str = "style.css"
-
 def update_model(model, fields, card_types, css):
     model[key_name_anki_model_css] = css
     current_templates = model['tmpls']
