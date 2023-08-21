@@ -63,19 +63,9 @@ def create_model(name, fields, card_types, css):
         aqt.mw.col.models.add_template(new_model, template)
     aqt.mw.col.models.add(new_model)
 
-def _reload_config():
-    utils.reload_config()
-    global config_css_name
-    config_css_name = utils.cfg("cssName")
-
-def import_tmpls():
-    root = gui.get_dir()
-    if not root: return
-    _reload_config()
-
+def import_note_types_from_directory(root):
     count_updated_model = 0
     count_created_model = 0
-
     file_path_dir_note_types = [os.path.join(root, item)
                                 for item in os.listdir(root)
                                 if os.path.isdir(os.path.join(root, item))]
@@ -137,13 +127,29 @@ def import_tmpls():
                 card_types = card_types,
                 css = css)
             count_created_model = count_created_model + 1
-    gui.notify(f"created model: {count_created_model}, updated models: {count_updated_model}")
+    aqt.utils.showInfo(f"created model: {count_created_model}, updated models: {count_updated_model}")
 
+def import_note_types_from_default_directory():
+    utils.reload_config()
+    default_directory = utils.dict_config['default-directory']
+    if not os.path.isdir(default_directory):
+        # aqt.utils.showWarning("default_directory is not a directory.")
+        a = aqt.QErrorMessage(aqt.mw.window)
+        a.showMessage('a')
+    return
+    import_note_types_from_directory(default_directory)
+
+def import_note_types_from_user_selected_directory():
+    root = gui.get_dir()
+    if not root:
+        return
+    import_note_types_from_directory(root)
 
 def export_tmpls():
     root = gui.get_dir()
-    if not root: return
-    _reload_config()
+    if not root:
+        return
+    utils.reload_config()
 
     count_notetype = 0
     count_template = 0
