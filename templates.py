@@ -52,7 +52,11 @@ def update_fields(model, new_fields):
     counter = counter + 1
 
 def update_model(model, fields, card_types, css):
+    # Update CSS
     model[key_name_anki_model_css] = css
+    # Update fields
+    update_fields(model, fields)
+    # Update templates
     current_templates = model['tmpls']
     for card_type in card_types:
         index = next((i for i, item in enumerate(current_templates) if item['name'] == card_type['name']), None)
@@ -67,6 +71,7 @@ def update_model(model, fields, card_types, css):
             template['qfmt'] = card_type['front']
             template['afmt'] = card_type['back']
             aqt.mw.col.models.add_template(model, template)
+    # Save changes
     aqt.mw.col.models.save(model)
 
 def create_model(name, fields, card_types, css):
