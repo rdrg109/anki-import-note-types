@@ -21,7 +21,7 @@ def init():
         aqt.utils.qconnect(action.triggered, func)
         menu.addAction(action)
 
-    # editor setup for _edit_config
+    # We do this in order to pass "mw" to "ConfigEditor" as parent widget
     aqt.mw.mgr = aqt.mw.addonManager
 
 def get_dir():
