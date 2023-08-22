@@ -15,11 +15,14 @@ class LogText():
     def show(self):
         aqt.mw.utils.showText(self.get())
 
-def get_dir():
+def prompt_for_directory():
     folder = aqt.QFileDialog.getExistingDirectory(aqt.mw, "Select a Directory")
+    # If the user didn't select a directory, then the length is zero.
+    #
+    # https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QFileDialog.html#PySide2.QtWidgets.PySide2.QtWidgets.QFileDialog.getExistingDirectoryUrl
+    # , if the user selects an empty directory, the function
     if len(folder) != 0:
         return folder
-    return None
 
 def import_note_types_from_default_directory():
     config.reload()
@@ -30,10 +33,9 @@ def import_note_types_from_default_directory():
     import_note_types_from_directory(default_directory)
 
 def import_note_types_from_user_selected_directory():
-    root = gui.get_dir()
-    if not root:
-        return
-    import_note_types_from_directory(root)
+    selected_directory = prompt_for_directory()
+    if selected_directory:
+        import_note_types_from_directory(selected_directory)
 
 def import_note_types_from_directory(root):
     log_text = LogText()
@@ -104,7 +106,7 @@ def import_note_types_from_directory(root):
     aqt.utils.showText(log_text.get())
 
 def export_note_types():
-    root = utilities.get_dir()
+    root = utilities.prompt_for_directory()
     if not root:
         return
     config.reload()
