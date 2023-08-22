@@ -4,13 +4,6 @@ import aqt
 import logging
 from . import gui, utils
 
-logging.basicConfig(
-  filename='/tmp/anki-import-export-note-types.log',
-  filemode='a',
-  format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
-  datefmt='%H:%M:%S',
-  level=logging.DEBUG)
-
 # key names used by Anki
 key_name_anki_model_css = "css"
 key_name_anki_model_fields = "flds"
@@ -27,8 +20,7 @@ class LogText():
     def get(self):
         return '\n'.join(self.text)
 
-def update_fields(model, new_fields):
-  logging.debug(f"Parameters received: model: {model}, new_fields: {new_fields}")
+def update_fields(model, new_fields, log_text):
   # Remove existing fields that don't exist in the new list of fields
   model_fields = model['flds']
   # We create a list containing the name of the existing fields in the
@@ -39,7 +31,7 @@ def update_fields(model, new_fields):
     if model_field_name not in new_fields:
       model_field = next((item for item in model_fields if item['name'] == model_field_name), None)
       model_fields.remove(model_field)
-      logging.debug(f"Field f{model_field['name']} has been removed")
+      log_text.add_line(f"Field {model_field['name']} has been removed")
   # Iterate through the new field names and create them if they don't exist in the model
   for new_field_name in new_fields:
     existing_field = next((item for item in model_fields if item['name'] == new_field_name), None)
@@ -47,7 +39,7 @@ def update_fields(model, new_fields):
       continue
     new_field = aqt.mw.col.models.new_field(new_field_name)
     aqt.mw.col.models.add_field(model, new_field)
-    logging.debug(f"Field f{new_field_name} has been created")
+    log_text.add_line(f"Field {new_field_name} has been created")
   # At this point, the existing fields and the new fields have the
   # same number of elements, but the elements might not be sorted
   # according to the list of new fields.
@@ -59,11 +51,11 @@ def update_fields(model, new_fields):
     aqt.mw.col.models.reposition_field(model, field_dictionary, counter)
     counter = counter + 1
 
-def update_model(model, fields, card_types, css):
+def update_model(model, fields, card_types, css, log_text):
     # Update CSS
     model[key_name_anki_model_css] = css
     # Update fields
-    update_fields(model, fields)
+    update_fields(model, fields, log_text)
     # Update templates
     current_templates = model['tmpls']
     for card_type in card_types:
@@ -118,7 +110,6 @@ def create_model(name, fields, card_types, css):
 
 def import_note_types_from_directory(root):
     log_text = LogText()
-    count_updated_model = 0
     count_created_model = 0
     file_path_dir_note_types = [os.path.join(root, item)
                                 for item in os.listdir(root)
@@ -171,8 +162,8 @@ def import_note_types_from_directory(root):
                 model = model,
                 css = css,
                 card_types = card_types,
-                fields = fields)
-            count_updated_model = count_updated_model + 1
+                fields = fields,
+                log_text = log_text)
         # If the model doesn't exist, create it
         else:
             create_model(
@@ -183,7 +174,6 @@ def import_note_types_from_directory(root):
             log_text.add_line(f"Note type was created: {note_type_name}")
             count_created_model = count_created_model + 1
     log_text.add_line(f"Number of created models: {count_created_model}")
-    log_text.add_line(f"Number of updated models: {count_updated_model}")
     aqt.utils.showText(log_text.get())
 
 def import_note_types_from_default_directory():
