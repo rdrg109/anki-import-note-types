@@ -1,112 +1,39 @@
-import os
-import json
 import aqt
-import logging
-from . import gui, utils
-
-# key names used by Anki
-key_name_anki_model_css = "css"
-key_name_anki_model_fields = "flds"
-key_name_anki_model_templates = "tmpls"
-key_name_anki_model_template_name = "name"
-key_name_anki_model_template_front = "qfmt"
-key_name_anki_model_template_back = "afmt"
+import os
+from . import config, models
 
 class LogText():
-    def __init__(self):
-        self.text = []
+    def __init__(self, text=None):
+        if text:
+            self.text = text
+        else:
+            self.text = []
     def add_line(self, string):
         self.text.append(string)
     def get(self):
         return '\n'.join(self.text)
+    def show(self):
+        aqt.mw.utils.showText(self.get())
 
-def update_fields(model, new_fields, log_text):
-  # Remove existing fields that don't exist in the new list of fields
-  model_fields = model['flds']
-  # We create a list containing the name of the existing fields in the
-  # model, because we are not iterating through the list since we use
-  # .remove() from the list
-  model_field_names = [x['name'] for x in model_fields]
-  for model_field_name in model_field_names:
-    if model_field_name not in new_fields:
-      model_field = next((item for item in model_fields if item['name'] == model_field_name), None)
-      model_fields.remove(model_field)
-      log_text.add_line(f"Field {model_field['name']} has been removed")
-  # Iterate through the new field names and create them if they don't exist in the model
-  for new_field_name in new_fields:
-    existing_field = next((item for item in model_fields if item['name'] == new_field_name), None)
-    if existing_field:
-      continue
-    new_field = aqt.mw.col.models.new_field(new_field_name)
-    aqt.mw.col.models.add_field(model, new_field)
-    log_text.add_line(f"Field {new_field_name} has been created")
-  # At this point, the existing fields and the new fields have the
-  # same number of elements, but the elements might not be sorted
-  # according to the list of new fields.
-  #
-  # Sort the fields
-  counter = 0
-  for new_field_name in new_fields:
-    field_dictionary = next((item for item in model_fields if item['name'] == new_field_name), None)
-    aqt.mw.col.models.reposition_field(model, field_dictionary, counter)
-    counter = counter + 1
+def get_dir():
+    folder = aqt.QFileDialog.getExistingDirectory(aqt.mw, "Select a Directory")
+    if len(folder) != 0:
+        return folder
+    return None
 
-def update_model(model, fields, card_types, css, log_text):
-    # Update CSS
-    model[key_name_anki_model_css] = css
-    # Update fields
-    update_fields(model, fields, log_text)
-    # Update templates
-    current_templates = model['tmpls']
-    for card_type in card_types:
-        index = next((i for i, item in enumerate(current_templates) if item['name'] == card_type['name']), None)
-        # In this conditional, we shouldn't write "if index:", because
-        # when the index is 0, it will evaluate to False, when index
-        # is 0, we want to evaluate to True.
-        if index != None:
-            current_templates[index]['qfmt'] = card_type['front']
-            current_templates[index]['afmt'] = card_type['back']
-        else:
-            template = aqt.mw.col.models.new_template(card_type['name'])
-            template['qfmt'] = card_type['front']
-            template['afmt'] = card_type['back']
-            aqt.mw.col.models.add_template(model, template)
-    # Save changes
-    aqt.mw.col.models.save(model)
+def import_note_types_from_default_directory():
+    config.reload()
+    default_directory = config.dict['default-directory']
+    if not os.path.isdir(default_directory):
+        LogText(f"The provided path is not an existing directory: {default_directory}").show()
+        return
+    import_note_types_from_directory(default_directory)
 
-def create_model(name, fields, card_types, css):
-    # create_model('My model', ['field 1', 'field 2', 'field 3'], [
-    #     {
-    #         'name': 'My card type 1',
-    #         'front': '{{foo1}}',
-    #         'back': '{{foo32}}'
-    #     },
-    #     {
-    #         'name': 'My card type 2',
-    #         'front': '{{foo2}}',
-    #         'back': '{{foo1}}'
-    #     },
-    #     {
-    #         'name': 'My card type 3',
-    #         'front': '{{foo3}}',
-    #         'back': '{{foo1}}'
-    #     }])
-    # Create new model
-    new_model = aqt.mw.col.models.new(name)
-    # Add CSS
-    if css:
-        new_model['css'] = css
-    # Add fields
-    for i in fields:
-        field = aqt.mw.col.models.new_field(i)
-        aqt.mw.col.models.add_field(new_model, field)
-    # Add card_types
-    for card_type in card_types:
-        template = aqt.mw.col.models.new_template(card_type['name'])
-        template['qfmt'] = card_type['front']
-        template['afmt'] = card_type['back']
-        aqt.mw.col.models.add_template(new_model, template)
-    aqt.mw.col.models.add(new_model)
+def import_note_types_from_user_selected_directory():
+    root = gui.get_dir()
+    if not root:
+        return
+    import_note_types_from_directory(root)
 
 def import_note_types_from_directory(root):
     log_text = LogText()
@@ -158,7 +85,7 @@ def import_note_types_from_directory(root):
         model = aqt.mw.col.models.by_name(note_type_name)
         # If the note type exists, update it.
         if model:
-            update_model(
+            models.update_model(
                 model = model,
                 css = css,
                 card_types = card_types,
@@ -166,7 +93,7 @@ def import_note_types_from_directory(root):
                 log_text = log_text)
         # If the model doesn't exist, create it
         else:
-            create_model(
+            models.create_model(
                 name = note_type_name,
                 fields = fields,
                 card_types = card_types,
@@ -176,27 +103,11 @@ def import_note_types_from_directory(root):
     log_text.add_line(f"Number of created models: {count_created_model}")
     aqt.utils.showText(log_text.get())
 
-def import_note_types_from_default_directory():
-    utils.reload_config()
-    default_directory = utils.dict_config['default-directory']
-    if not os.path.isdir(default_directory):
-        # aqt.utils.showWarning("default_directory is not a directory.")
-        a = aqt.QErrorMessage(aqt.mw.window)
-        a.showMessage('a')
-    return
-    import_note_types_from_directory(default_directory)
-
-def import_note_types_from_user_selected_directory():
-    root = gui.get_dir()
+def export_note_types():
+    root = utilities.get_dir()
     if not root:
         return
-    import_note_types_from_directory(root)
-
-def export_tmpls():
-    root = gui.get_dir()
-    if not root:
-        return
-    utils.reload_config()
+    config.reload()
 
     count_notetype = 0
     count_template = 0
@@ -253,4 +164,5 @@ def export_tmpls():
                     f.write(tmpl[key_name_anki_model_template_back])
             count_template += 1
         count_notetype += 1
-    gui.notify("exported (Template: {} from NoteType:{})".format(count_template, count_notetype))
+    gui.notify("exported (Template: {} from NoteType:{})".format(count_template, count_notetype)
+)
