@@ -19,6 +19,14 @@ key_name_anki_model_template_name = "name"
 key_name_anki_model_template_front = "qfmt"
 key_name_anki_model_template_back = "afmt"
 
+class LogText():
+    def __init__(self):
+        self.text = []
+    def add_line(self, string):
+        self.text.append(string)
+    def get(self):
+        return '\n'.join(self.text)
+
 def update_fields(model, new_fields):
   logging.debug(f"Parameters received: model: {model}, new_fields: {new_fields}")
   # Remove existing fields that don't exist in the new list of fields
@@ -109,6 +117,7 @@ def create_model(name, fields, card_types, css):
     aqt.mw.col.models.add(new_model)
 
 def import_note_types_from_directory(root):
+    log_text = LogText()
     count_updated_model = 0
     count_created_model = 0
     file_path_dir_note_types = [os.path.join(root, item)
@@ -171,8 +180,11 @@ def import_note_types_from_directory(root):
                 fields = fields,
                 card_types = card_types,
                 css = css)
+            log_text.add_line(f"Note type was created: {note_type_name}")
             count_created_model = count_created_model + 1
-    aqt.utils.showInfo(f"created model: {count_created_model}, updated models: {count_updated_model}")
+    log_text.add_line(f"Number of created models: {count_created_model}")
+    log_text.add_line(f"Number of updated models: {count_updated_model}")
+    aqt.utils.showText(log_text.get())
 
 def import_note_types_from_default_directory():
     utils.reload_config()
