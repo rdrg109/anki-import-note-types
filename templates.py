@@ -1,7 +1,15 @@
 import os
 import json
 import aqt
+import logging
 from . import gui, utils
+
+logging.basicConfig(
+  filename='/tmp/anki-import-export-note-types.log',
+  filemode='a',
+  format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+  datefmt='%H:%M:%S',
+  level=logging.DEBUG)
 
 # key names used by Anki
 key_name_anki_model_css = "css"
@@ -10,6 +18,38 @@ key_name_anki_model_templates = "tmpls"
 key_name_anki_model_template_name = "name"
 key_name_anki_model_template_front = "qfmt"
 key_name_anki_model_template_back = "afmt"
+
+def update_fields(model, new_fields):
+  logging.debug(f"Parameters received: model: {model}, new_fields: {new_fields}")
+  # Remove existing fields that don't exist in the new list of fields
+  model_fields = model['flds']
+  # We create a list containing the name of the existing fields in the
+  # model, because we are not iterating through the list since we use
+  # .remove() from the list
+  model_field_names = [x['name'] for x in model_fields]
+  for model_field_name in model_field_names:
+    if model_field_name not in new_fields:
+      model_field = next((item for item in model_fields if item['name'] == model_field_name), None)
+      model_fields.remove(model_field)
+      logging.debug(f"Field f{model_field['name']} has been removed")
+  # Iterate through the new field names and create them if they don't exist in the model
+  for new_field_name in new_fields:
+    existing_field = next((item for item in model_fields if item['name'] == new_field_name), None)
+    if existing_field:
+      continue
+    new_field = aqt.mw.col.models.new_field(new_field_name)
+    aqt.mw.col.models.add_field(model, new_field)
+    logging.debug(f"Field f{new_field_name} has been created")
+  # At this point, the existing fields and the new fields have the
+  # same number of elements, but the elements might not be sorted
+  # according to the list of new fields.
+  #
+  # Sort the fields
+  counter = 0
+  for new_field_name in new_fields:
+    field_dictionary = next((item for item in model_fields if item['name'] == new_field_name), None)
+    aqt.mw.col.models.reposition_field(model, field_dictionary, counter)
+    counter = counter + 1
 
 def update_model(model, fields, card_types, css):
     model[key_name_anki_model_css] = css
