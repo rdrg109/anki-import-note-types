@@ -1,5 +1,5 @@
 import aqt
-from . import utilities, config, bind_keys
+from . import utilities, bind_keys
 
 menu = aqt.QMenu(aqt.mw.form.menuTools)
 menu.setTitle("Import note types")
@@ -13,6 +13,3 @@ actions = [
 for action, func in actions:
     aqt.utils.qconnect(action.triggered, func)
     menu.addAction(action)
-
-# We do this in order to pass "mw" to "ConfigEditor" as parent widget
-aqt.mw.mgr = aqt.mw.addonManager
