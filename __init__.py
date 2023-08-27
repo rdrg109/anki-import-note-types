@@ -1,5 +1,5 @@
 import aqt
-from . import utilities, config
+from . import utilities, config, bind_keys
 
 menu = aqt.QMenu(aqt.mw.form.menuTools)
 menu.setTitle("Import / Export templates")
@@ -18,3 +18,4 @@ for action, func in actions:
 
 # We do this in order to pass "mw" to "ConfigEditor" as parent widget
 aqt.mw.mgr = aqt.mw.addonManager
+bind_keys.init()
