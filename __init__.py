@@ -16,4 +16,3 @@ for action, func in actions:
 
 # We do this in order to pass "mw" to "ConfigEditor" as parent widget
 aqt.mw.mgr = aqt.mw.addonManager
-bind_keys.init()
