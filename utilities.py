@@ -3,20 +3,17 @@ import os
 from . import config, models
 
 class LogText():
-    def __init__(self, text=None):
-        if text:
-            self.text = text
-        else:
-            self.text = []
+    def __init__(self):
+        self.text = []
     def add_line(self, string):
         self.text.append(string)
     def get(self):
         return '\n'.join(self.text)
     def show(self):
-        aqt.mw.utils.showText(self.get())
+        aqt.utils.showText(self.get())
 
 def prompt_for_directory():
-    folder = aqt.QFileDialog.getExistingDirectory(aqt.mw, "Select a Directory")
+    folder = aqt.QFileDialog.getExistingDirectory(aqt.mw, "Select a directory")
     # If the user didn't select a directory, then the length is zero.
     #
     # https://doc.qt.io/qtforpython-5/PySide2/QtWidgets/QFileDialog.html#PySide2.QtWidgets.PySide2.QtWidgets.QFileDialog.getExistingDirectoryUrl
@@ -27,8 +24,11 @@ def prompt_for_directory():
 def import_note_types_from_default_directory():
     config.reload()
     default_directory = config.dict['default-directory']
+    if default_directory == "":
+        aqt.utils.show_critical(f"The value of default_directory is empty. Please set it in the configurations of the add-on.")
+        return
     if not os.path.isdir(default_directory):
-        LogText(f"The provided path is not an existing directory: {default_directory}").show()
+        aqt.utils.show_critical(f"The value of default_directory (\"{default_directory}\") is not an existing directory.")
         return
     import_note_types_from_directory(default_directory)
 
