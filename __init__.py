@@ -1,5 +1,5 @@
 import aqt
-from . import utilities, bind_keys
+from . import utilities
 
 menu = aqt.QMenu(aqt.mw.form.menuTools)
 menu.setTitle("Import note types")
